@@ -2,34 +2,31 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 
+require('dotenv').config();
+
 const progress = require('./app/services/progress').start();
 const db = require('./app/config/db.config');
 
-/* Load global variables from .env */
-require('dotenv').config();
-
-/* Load variables from .env */
-const HOST = process.env.API_HOST || '0.0.0.0';
-const PORT = process.env.API_PORT || 3000;
+const HOST = process.env.APP_HOST || '0.0.0.0';
+const PORT = process.env.APP_PORT || 3000;
 
 /* Load Express */
 const app = express();
 
 /* Database connexion */
-db.connect()
-  .then(() => {
-    progress.succeed('Database connexion success');
+db.once('open', () => {
+  progress.succeed('Database connexion success');
 
-    /* Start the application */
-    app.listen(PORT, HOST, () => {
-      progress.succeed(`The application is running on ${HOST}:${PORT}`);
-      progress.info(`Environment: ${process.env.NODE_ENV}`);
-    });
-  })
-  .catch((error) => {
-    progress.fail(`Database connexion error: ${error}`);
-    process.exit(1);
+  app.listen(PORT, HOST, () => {
+    progress.succeed(`The application is running on ${HOST}:${PORT}`);
+    progress.info(`Environment: ${process.env.NODE_ENV}`);
   });
+});
+
+db.on('error', (error) => {
+  progress.fail(`Database connexion error: ${error}`);
+  process.exit(1);
+});
 
 /* Log HTTP request inside the console */
 app.use(morgan('tiny'));
@@ -39,9 +36,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 /* Load routes */
-app.get('/', (req, res) => {
-  res.json({ message: 'API is working' });
-});
+app.use(process.env.API_URL, require('./app/routes'));
 
 // Returns a 404 response for all unregistered routes
 app.all('/*', (req, res) => {

@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-const sauceSchema = new mongoose.Schema({
-  // id: ObjectID — identifiant unique créé par MongoDB ; ???
+const saucesSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   name: { type: String, required: true },
   manufacturer: { type: String, required: true },
@@ -15,4 +14,4 @@ const sauceSchema = new mongoose.Schema({
   usersDisliked: { type: [String], default: 0 },
 });
 
-module.exports = mongoose.model('sauces', sauceSchema);
+module.exports = mongoose.model('sauces', saucesSchema);
