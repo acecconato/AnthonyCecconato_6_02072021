@@ -2,7 +2,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 
-const progress = require('./app/services/progress');
+const progress = require('./app/services/progress').start();
 const db = require('./app/config/db.config');
 
 /* Load global variables from .env */
@@ -18,7 +18,13 @@ const app = express();
 /* Database connexion */
 db.connect()
   .then(() => {
-    progress.succeed('Database connexion succes').start();
+    progress.succeed('Database connexion success');
+
+    /* Start the application */
+    app.listen(PORT, HOST, () => {
+      progress.succeed(`The application is running on ${HOST}:${PORT}`);
+      progress.info(`Environment: ${process.env.NODE_ENV}`);
+    });
   })
   .catch((error) => {
     progress.fail(`Database connexion error: ${error}`);
@@ -40,9 +46,4 @@ app.get('/', (req, res) => {
 // Returns a 404 response for all unregistered routes
 app.all('/*', (req, res) => {
   res.status(404).json({ message: 'Resource not found.' });
-});
-
-/* Start the API */
-app.listen(PORT, HOST, () => {
-  // console.log(`API running on ${HOST}:${PORT}\nEnvironment: ${process.env.NODE_ENV}`);
 });
