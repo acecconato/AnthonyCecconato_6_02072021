@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "node_modules/.bin/nodemon",
+    "serve": "node_modules/.bin/nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
