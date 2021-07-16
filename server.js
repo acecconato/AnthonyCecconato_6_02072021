@@ -1,19 +1,24 @@
+// Load vendor dependencies
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const bearerToken = require('express-bearer-token');
 
+// Load .env configuration
 require('dotenv').config();
 
+// Load project dependencies
 const progress = require('./app/services/progress').start();
 const db = require('./app/config/db.config');
 
+// Define variables
 const HOST = process.env.APP_HOST || '0.0.0.0';
 const PORT = process.env.APP_PORT || 3000;
 
-/* Load Express */
+// Load express
 const app = express();
 
-/* Database connexion */
+// Start the application once the database connexion is open
 db.once('open', () => {
   progress.succeed('Database connexion success');
 
@@ -23,22 +28,26 @@ db.once('open', () => {
   });
 });
 
+// Handle database errors
 db.on('error', (error) => {
   progress.fail(`Database connexion error: ${error}`);
   process.exit(1);
 });
 
-/* Log HTTP request inside the console */
+// Output HTTP request in the console
 app.use(morgan('tiny'));
 
-/* Get request body's parameters */
+// Get request body's parameters
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-/* Load routes */
+// Create a req.token key if a Bearer token is detected
+app.use(bearerToken());
+
+// Load all routes
 app.use(process.env.API_URL, require('./app/routes'));
 
 // Returns a 404 response for all unregistered routes
-app.all('/*', (req, res) => {
-  res.status(404).json({ message: 'Resource not found.' });
+app.all('*', (req, res) => {
+  res.status(404).json('Resource not found');
 });
