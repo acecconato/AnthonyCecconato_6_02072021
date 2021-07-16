@@ -1,22 +1,44 @@
+const { generateToken } = require('../services/utils');
 const Users = require('../models/users.model');
-const processMongooseError = require('../services/processMongooseError');
 
-exports.create = (req, res) => {
-  const newUser = new Users(req.body);
-  newUser.save()
-    .then((data) => {
-      res.status(201).json({ message: `User ${data._id} created` });
+/**
+ * Register a new user in the database
+ * @param req
+ * @param res
+ */
+exports.signup = (req, res) => {
+  const user = new Users({
+    email: req.body.email,
+    password: req.body.password,
+  });
+
+  user.save()
+    .then((savedUser) => {
+      res.status(201).json({ message: `User ${savedUser._id} created` });
     })
     .catch((error) => {
-      processMongooseError(error, res);
+      res.json(error);
     });
 };
 
-exports.findAll = (req, res) => {
-  Users.find()
-    .then((data) => {
-      res.json({ data });
-    }).catch((error) => {
-      processMongooseError(error, res);
+/**
+ * Login a user then return the userId and a json web token
+ * @param req
+ * @param res
+ */
+exports.login = (req, res) => {
+  Users.findOne({ email: req.body.email }, async (error, user) => {
+    if (error) {
+      return res.json(error);
+    }
+
+    if (!user || !await user.comparePassword(req.body.password)) {
+      return res.status(401).json('Authentication failed');
+    }
+
+    return res.json({
+      userId: user._id,
+      token: generateToken(user),
     });
+  });
 };
