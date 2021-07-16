@@ -13,12 +13,8 @@ exports.signup = (req, res) => {
   });
 
   user.save()
-    .then((savedUser) => {
-      res.status(201).json({ message: `User ${savedUser._id} created` });
-    })
-    .catch((error) => {
-      res.json(error);
-    });
+    .then((savedUser) => res.status(201).json({ message: `User ${savedUser._id} created` }))
+    .catch((error) => res.json(error));
 };
 
 /**
@@ -27,7 +23,7 @@ exports.signup = (req, res) => {
  * @param res
  */
 exports.login = (req, res) => {
-  Users.findOne({ email: req.body.email }, async (error, user) => {
+  Users.findOne({ email: req.body.email.toLowerCase() }, async (error, user) => {
     if (error) {
       return res.json(error);
     }

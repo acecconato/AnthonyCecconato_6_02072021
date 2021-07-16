@@ -10,12 +10,15 @@ const usersSchema = new mongoose.Schema({
     required: true,
     unique: true,
     validate: validateEmail,
+    lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
     required: true,
     minlength: 8,
     maxlength: 64,
+    trim: true,
     validate: [
       { validator: isPasswordInDataBreaches, message: 'Password is listed in data breaches, you must change it' },
       { validator: isStrongPassword, message: 'Password is too weak' },
@@ -40,12 +43,13 @@ usersSchema.pre('save', async function (next) {
   next();
 });
 
+/**
+ * Check if the password match
+ * @param plainPassword
+ * @returns {Promise<boolean>}
+ */
 usersSchema.methods.comparePassword = async function (plainPassword) {
-  try {
-    return await argon2.verify(this.password, plainPassword);
-  } catch (error) {
-    throw new Error(error);
-  }
+  return argon2.verify(this.password, plainPassword);
 };
 
 usersSchema.plugin(uniqueValidator);
