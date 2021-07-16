@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const bearerToken = require('express-bearer-token');
+const cors = require('cors');
 
 // Load .env configuration
 require('dotenv').config();
@@ -17,6 +18,11 @@ const PORT = process.env.APP_PORT || 3000;
 
 // Load express
 const app = express();
+
+// Load CORS
+app.use(cors({
+  origin: 'http://localhost:4200',
+}));
 
 // Start the application once the database connexion is open
 db.once('open', () => {
