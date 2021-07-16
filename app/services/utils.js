@@ -5,4 +5,6 @@ const jwt = require('jsonwebtoken');
  * @param user
  * @returns {*}
  */
-exports.generateToken = (user) => jwt.sign({ email: user.email, _id: user._id, userId: user._id }, process.env.SECRET);
+exports.generateToken = (user) => jwt.sign({ email: user.email, _id: user._id, userId: user._id }, process.env.SECRET, {
+  expiresIn: 86400,
+});
