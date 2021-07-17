@@ -38,7 +38,7 @@ module.exports = async (req, res, next) => {
 
     await image.mv(localFilePath, (err) => {
       if (err) {
-        res.status(500).json(err);
+        return res.status(500).json(err);
       }
 
       return next();
