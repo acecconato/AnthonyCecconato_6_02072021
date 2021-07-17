@@ -4,6 +4,8 @@ const express = require('express');
 const morgan = require('morgan');
 const bearerToken = require('express-bearer-token');
 const cors = require('cors');
+const path = require('path');
+const fileUpload = require('express-fileupload');
 
 // Load .env configuration
 require('dotenv').config();
@@ -18,6 +20,9 @@ const PORT = process.env.APP_PORT || 3000;
 
 // Load express
 const app = express();
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Load CORS
 app.use(cors({
@@ -46,6 +51,11 @@ app.use(morgan('tiny'));
 // Get request body's parameters
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+// Load files from requests
+app.use(fileUpload({
+  limits: { fileSize: '2mb' },
+}));
 
 // Create a req.token key if a Bearer token is detected
 app.use(bearerToken());

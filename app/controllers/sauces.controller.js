@@ -1,6 +1,6 @@
 const Sauces = require('../models/sauces.model');
 
-exports.create = (req, res) => {
+exports.create = async (req, res) => {
   res.status(201).json({ message: 'Created' });
 };
 
