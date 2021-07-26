@@ -110,13 +110,13 @@ exports.handleLike = (req, res, next) => {
         case USER_CANCELED:
           // If the sauce was liked
           if (sauce.usersLiked.includes(userId)) {
-            sauce.usersLiked = sauce.usersLiked.filter((value) => value !== userId);
+            sauce.usersLiked = delete sauce.usersLiked[userId];
             sauce.likes -= 1;
           }
 
           // If the sauce was disliked
           if (sauce.usersDisliked.includes(userId)) {
-            sauce.usersDisliked = sauce.usersDisliked.filter((value) => value !== userId);
+            sauce.usersDisliked = delete sauce.usersDisliked[userId];
             sauce.dislikes -= 1;
           }
           break;
