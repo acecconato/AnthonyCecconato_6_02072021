@@ -4,7 +4,6 @@ const express = require('express');
 const morgan = require('morgan');
 const bearerToken = require('express-bearer-token');
 const cors = require('cors');
-const path = require('path');
 const fileUpload = require('express-fileupload');
 
 // Load .env configuration
@@ -22,7 +21,7 @@ const PORT = process.env.APP_PORT || 3000;
 const app = express();
 
 // Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static('public'));
 
 // Load CORS
 app.use(cors({
@@ -54,7 +53,9 @@ app.use(bodyParser.json());
 
 // Load files from requests
 app.use(fileUpload({
-  limits: { fileSize: '2mb' },
+  limits: { fileSize: 1e+6 }, // 1MB
+  safeFileNames: true,
+  abortOnLimit: true,
 }));
 
 // Create a req.token key if a Bearer token is detected
