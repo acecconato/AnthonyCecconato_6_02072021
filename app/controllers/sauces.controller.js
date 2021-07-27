@@ -129,7 +129,6 @@ exports.handleLike = (req, res, next) => {
           break;
 
         default:
-          console.log(like);
           return next();
       }
 
