@@ -42,7 +42,7 @@ exports.create = async (req, res) => {
       newSauce.imageUrl = generateImageUrl(uploadedImage);
       newSauce.save().then((savedSauce) => res.status(201).json({ message: `Sauce ${savedSauce._id} created` }));
     })
-    .catch((error) => res.status(500).send(error));
+    .catch((error) => res.status(500).json(error));
 };
 
 /**
@@ -52,7 +52,7 @@ exports.create = async (req, res) => {
  * @param next
  * @returns {*}
  */
-exports.findOneByIdAndUpdate = (req, res, next) => {
+exports.update = (req, res, next) => {
   const { id } = req.params;
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
@@ -97,7 +97,7 @@ exports.findOneByIdAndUpdate = (req, res, next) => {
  * @param req
  * @param res
  */
-exports.findAll = (req, res) => {
+exports.getAll = (req, res) => {
   Sauces.find()
     .then((sauces) => {
       sauces.map((sauce) => sauce.imageUrl = `${req.protocol}://${req.headers.host}${sauce.imageUrl}`);
@@ -114,7 +114,7 @@ exports.findAll = (req, res) => {
  * @param next
  * @returns {*}
  */
-exports.findOneById = (req, res, next) => {
+exports.getOneById = (req, res, next) => {
   const { id } = req.params;
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
@@ -200,7 +200,7 @@ exports.handleLike = (req, res, next) => {
  * @param next
  * @returns {*}
  */
-exports.findOneByIdAndDelete = (req, res, next) => {
+exports.delete = (req, res, next) => {
   const { id } = req.params;
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {

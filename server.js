@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const bearerToken = require('express-bearer-token');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
+const helmet = require('helmet');
 
 // Load .env configuration
 require('dotenv').config();
@@ -19,6 +20,9 @@ const PORT = process.env.APP_PORT || 3000;
 
 // Load express
 const app = express();
+
+// Helmet for default security
+app.use(helmet());
 
 // Serve static files
 app.use(process.env.PUBLIC_DIR, express.static('public'));

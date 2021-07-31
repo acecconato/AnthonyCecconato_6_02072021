@@ -23,7 +23,9 @@ exports.signup = (req, res) => {
  * @param res
  */
 exports.login = (req, res) => {
-  Users.findOne({ email: req.body.email.toLowerCase() }, async (error, user) => {
+  const { email } = req.body;
+
+  Users.findOne({ email: email.toLowerCase() }, async (error, user) => {
     if (error) {
       return res.json(error);
     }
