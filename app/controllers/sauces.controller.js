@@ -1,5 +1,5 @@
 const Sauces = require('../models/sauces.model');
-const { upload, replace } = require('../services/fileUpload');
+const { upload, replace, removeFromRelativePath } = require('../services/fileUpload');
 const { generateImageUrl } = require('../services/utils');
 
 const USER_LIKED = 1;
@@ -82,7 +82,7 @@ exports.findOneByIdAndUpdate = (req, res, next) => {
         }
 
         await sauce.save();
-        return res.status(204).send();
+        return res.status(204).json({ message: `Sauce ${id} updated` });
       } catch (error) {
         return res.status(500).json(error);
       }
@@ -191,4 +191,32 @@ exports.handleLike = (req, res, next) => {
         .catch((error) => res.status(500).json(error));
     })
     .catch((error) => res.status(404).json(error));
+};
+
+/**
+ * Remove a sauce from the database, and remove its attached image from the storage
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+exports.findOneByIdAndDelete = (req, res, next) => {
+  const { id } = req.params;
+
+  if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
+    return next();
+  }
+
+  Sauces.findById(id)
+    .then(async (sauce) => {
+      try {
+        await removeFromRelativePath(sauce.imageUrl);
+        await Sauces.deleteOne({ _id: id });
+        res.status(200).json({ message: `Sauce ${id} deleted` });
+      } catch (e) {
+        return res.status(500).send();
+      }
+    })
+
+    .catch(() => res.status(404).send());
 };

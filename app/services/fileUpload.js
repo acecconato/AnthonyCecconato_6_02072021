@@ -61,3 +61,19 @@ exports.replace = async (filePathToReplace, newFile) => {
     }
   });
 };
+
+/**
+ * Remove a file from its relative path
+ * @param relativePath
+ * @returns {Promise<boolean>}
+ */
+exports.removeFromRelativePath = async (relativePath) => {
+  const absPath = path.join(__dirname, '..', '..', relativePath);
+
+  if (!fs.existsSync(absPath)) {
+    throw new Error('Unable to resolve the file path');
+  }
+
+  fs.unlinkSync(absPath);
+  return true;
+};
