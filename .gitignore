@@ -2,6 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/node,phpstorm+all,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,phpstorm+all,macos
 
+public/uploads/*
+
 ### macOS ###
 # General
 .DS_Store
