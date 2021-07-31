@@ -1,9 +1,6 @@
 const fileType = require('file-type');
-const path = require('path');
-const uuid = require('uuid');
 
 const ALLOWED = ['image/jpg', 'image/jpeg', 'image/png'];
-const UPLOAD_PATH = path.join(__dirname, '..', '..', 'public', 'uploads');
 
 /**
  * Middleware to handle image upload and verify the real mime type by checking the file buffer
@@ -27,10 +24,6 @@ module.exports = async (req, res, next) => {
     if (!image.mimetype || !ALLOWED.includes(image.mimetype) || !mimeType || !ALLOWED.includes(mimeType.mime)) {
       return res.status(415).json(`Unallowed file type, you can only pass: ${ALLOWED.join(' or ')}`);
     }
-
-    const generatedFilename = `${uuid.v4()}.${mimeType.ext}`;
-    req.files.image.path = path.join(UPLOAD_PATH, generatedFilename);
-    req.files.image.name = generatedFilename;
 
     return next();
   }

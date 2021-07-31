@@ -12,4 +12,6 @@ router.get('/:id', saucesController.findOneById);
 router.post('/', imageValidatorMiddleware, saucesController.create);
 router.post('/:id/like', saucesController.handleLike);
 
+router.put('/:id', imageValidatorMiddleware, saucesController.findOneByIdAndUpdate);
+
 module.exports = router;

@@ -1,5 +1,6 @@
 const Sauces = require('../models/sauces.model');
-const { upload } = require('../services/fileUpload');
+const { upload, replace } = require('../services/fileUpload');
+const { generateImageUrl } = require('../services/utils');
 
 const USER_LIKED = 1;
 const USER_DISLIKED = -1;
@@ -33,31 +34,81 @@ exports.create = async (req, res) => {
     manufacturer: sauceObject.manufacturer,
     description: sauceObject.description,
     mainPepper: sauceObject.mainPepper,
-    imageUrl: `${req.protocol}://${req.get('host')}/public/uploads/${image.name}`,
     heat: sauceObject.heat,
   });
 
-  newSauce.save()
-    .then((savedSauce) => {
-      upload(image, image.path).catch((err) => res.status(500).json(err));
-      return res.status(201).json({ message: `Sauce ${savedSauce._id} created` });
+  upload(image)
+    .then((uploadedImage) => {
+      newSauce.imageUrl = generateImageUrl(uploadedImage);
+      newSauce.save().then((savedSauce) => res.status(201).json({ message: `Sauce ${savedSauce._id} created` }));
     })
-    .catch((error) => res.status(400).send(error));
+    .catch((error) => res.status(500).send(error));
+};
+
+/**
+ * Find a sauce by its ID then update it
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+exports.findOneByIdAndUpdate = (req, res, next) => {
+  const { id } = req.params;
+
+  if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
+    return next();
+  }
+
+  const sauceObject = (req.files && req.files.image) ? { ...JSON.parse(req.body.sauce) } : req.body;
+  const image = (req.files && req.files.image) ? req.files.image : undefined;
+
+  if (!sauceObject) {
+    return res.status(422).send();
+  }
+
+  Sauces.findById(req.params.id)
+
+    .then(async (sauce) => {
+      sauce.name = sauceObject.name;
+      sauce.manufacturer = sauceObject.manufacturer;
+      sauce.description = sauceObject.description;
+      sauce.mainPepper = sauceObject.mainPepper;
+      sauce.heat = sauceObject.heat;
+
+      try {
+        if (image) {
+          await replace(sauce.imageUrl, image);
+          sauce.imageUrl = generateImageUrl(image);
+        }
+
+        await sauce.save();
+        return res.status(204).send();
+      } catch (error) {
+        return res.status(500).json(error);
+      }
+    })
+
+    .catch((error) => res.status(404).json(error));
 };
 
 /**
  * Get all sauces available
+ * Also generate the image web path from the imageUrl field
  * @param req
  * @param res
  */
 exports.findAll = (req, res) => {
   Sauces.find()
-    .then((sauces) => res.json(sauces))
+    .then((sauces) => {
+      sauces.map((sauce) => sauce.imageUrl = `${req.protocol}://${req.headers.host}${sauce.imageUrl}`);
+      return res.json(sauces);
+    })
     .catch((error) => res.status(400).json(error));
 };
 
 /**
  * Get a sauce by its id
+ * Also generate the image web path from the imageUrl field
  * @param req
  * @param res
  * @param next
@@ -71,7 +122,10 @@ exports.findOneById = (req, res, next) => {
   }
 
   Sauces.findById(id)
-    .then((sauce) => res.json(sauce))
+    .then((sauce) => {
+      sauce.imageUrl = `${req.protocol}://${req.headers.host}${sauce.imageUrl}`;
+      res.json(sauce);
+    })
     .catch((error) => res.status(404).json(error));
 };
 

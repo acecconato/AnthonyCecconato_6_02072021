@@ -21,11 +21,11 @@ const PORT = process.env.APP_PORT || 3000;
 const app = express();
 
 // Serve static files
-app.use('/public', express.static('public'));
+app.use(process.env.PUBLIC_DIR, express.static('public'));
 
 // Load CORS
 app.use(cors({
-  origin: 'http://localhost:4200',
+  origin: process.env.CLIENT_ENDPOINT,
 }));
 
 // Start the application once the database connexion is open
