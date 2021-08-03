@@ -155,7 +155,7 @@ exports.handleLike = (req, res, next) => {
       switch (parseInt(like)) {
         // DISLIKE
         case USER_DISLIKED:
-          (sauce.usersLiked.includes(userId)) ? delete sauce.usersLiked[userId] : null;
+          (sauce.usersLiked.includes(userId)) ? sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1) : null;
           (sauce.usersDisliked.indexOf(userId) === -1) ? sauce.usersDisliked.push(userId) : null;
           sauce.dislikes += 1;
           break;
@@ -164,20 +164,20 @@ exports.handleLike = (req, res, next) => {
         case USER_CANCELED:
           // If the sauce was liked
           if (sauce.usersLiked.includes(userId)) {
-            sauce.usersLiked = delete sauce.usersLiked[userId];
+            sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
             sauce.likes -= 1;
           }
 
           // If the sauce was disliked
           if (sauce.usersDisliked.includes(userId)) {
-            sauce.usersDisliked = delete sauce.usersDisliked[userId];
+            sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
             sauce.dislikes -= 1;
           }
           break;
 
         // LIKE
         case USER_LIKED:
-          (sauce.usersDisliked.includes(userId)) ? delete sauce.usersDisliked[userId] : null;
+          (sauce.usersDisliked.includes(userId)) ? sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1) : null;
           (sauce.usersLiked.indexOf(userId) === -1) ? sauce.usersLiked.push(userId) : null;
           sauce.likes += 1;
           break;
