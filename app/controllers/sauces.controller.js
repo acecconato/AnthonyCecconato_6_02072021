@@ -97,7 +97,7 @@ exports.update = (req, res, next) => {
  * @param req
  * @param res
  */
-exports.getAll = (req, res) => {
+exports.readAll = (req, res) => {
   Sauces.find()
     .then((sauces) => {
       sauces.map((sauce) => sauce.imageUrl = `${req.protocol}://${req.headers.host}${sauce.imageUrl}`);
@@ -114,7 +114,7 @@ exports.getAll = (req, res) => {
  * @param next
  * @returns {*}
  */
-exports.getOneById = (req, res, next) => {
+exports.readOneById = (req, res, next) => {
   const { id } = req.params;
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
