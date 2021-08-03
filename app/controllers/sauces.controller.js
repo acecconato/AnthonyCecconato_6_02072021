@@ -1,3 +1,5 @@
+const halson = require('halson');
+
 const Sauces = require('../models/sauces.model');
 const { upload, replace, removeFromRelativePath } = require('../services/fileUpload');
 const { generateImageUrl } = require('../services/utils');
@@ -99,8 +101,23 @@ exports.update = (req, res, next) => {
  */
 exports.readAll = (req, res) => {
   Sauces.find()
-    .then((sauces) => {
-      sauces.map((sauce) => sauce.imageUrl = `${req.protocol}://${req.headers.host}${sauce.imageUrl}`);
+    .then((datas) => {
+      const sauces = datas.map((sauceDatas) => {
+        const sauce = halson(sauceDatas._doc);
+        sauce
+          .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+          .addLink('sauces', { rel: 'readAll', method: 'GET', href: `${process.env.apiBaseDir}/sauces` })
+          .addLink('sauces', { rel: 'create', method: 'POST', href: `${process.env.apiBaseDir}/sauces` })
+          .addLink('sauces', { rel: 'update', method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+          .addLink('sauces', { rel: 'readOneById', method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+          .addLink('sauces', { rel: 'handleLike', method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
+          .addLink('sauces', { rel: 'delete', method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` });
+
+        return {
+          ...sauce,
+          imageUrl: `${process.env.baseDir}${sauceDatas.imageUrl}`,
+        };
+      });
       return res.json(sauces);
     })
     .catch((error) => res.status(400).json(error));
