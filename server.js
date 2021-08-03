@@ -27,6 +27,13 @@ app.use(helmet());
 // Serve static files
 app.use(process.env.PUBLIC_DIR, express.static('public'));
 
+// Define baseDir global variable
+app.use((req, res, next) => {
+  process.env.baseDir = `${req.protocol}://${req.headers.host}`;
+  process.env.apiBaseDir = `${process.env.baseDir}${process.env.API_URL}`;
+  next();
+});
+
 // Load CORS
 app.use(cors({
   origin: process.env.CLIENT_ENDPOINT,
