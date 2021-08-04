@@ -42,7 +42,16 @@ exports.create = async (req, res) => {
   upload(image)
     .then((uploadedImage) => {
       newSauce.imageUrl = generateImageUrl(uploadedImage);
-      newSauce.save().then((savedSauce) => res.status(201).json({ message: `Sauce ${savedSauce._id} created` }));
+      newSauce.save()
+        .then((saveResult) => {
+          saveResult.imageUrl = `${process.env.baseDir}${saveResult.imageUrl}`;
+          const savedSauce = halson(saveResult._doc)
+            .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
+            .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
+            .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/like` })
+            .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` });
+          res.status(201).json({ message: `Sauce ${savedSauce._id} created`, savedSauce });
+        });
     })
     .catch((error) => res.status(500).json(error));
 };
@@ -83,8 +92,15 @@ exports.update = (req, res, next) => {
           sauce.imageUrl = generateImageUrl(image);
         }
 
-        await sauce.save();
-        return res.status(204).json({ message: `Sauce ${id} updated` });
+        const saveResult = await sauce.save();
+
+        const savedSauce = halson(saveResult._doc)
+          .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
+          .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
+          .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/like` })
+          .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` });
+
+        return res.status(200).json({ message: `Sauce ${id} updated`, savedSauce });
       } catch (error) {
         return res.status(500).json(error);
       }
@@ -106,12 +122,9 @@ exports.readAll = (req, res) => {
         const sauce = halson(sauceDatas._doc);
         sauce
           .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
-          .addLink('sauces', { rel: 'readAll', method: 'GET', href: `${process.env.apiBaseDir}/sauces` })
-          .addLink('sauces', { rel: 'create', method: 'POST', href: `${process.env.apiBaseDir}/sauces` })
-          .addLink('sauces', { rel: 'update', method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
-          .addLink('sauces', { rel: 'readOneById', method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
-          .addLink('sauces', { rel: 'handleLike', method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
-          .addLink('sauces', { rel: 'delete', method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` });
+          .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+          .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
+          .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` });
 
         return {
           ...sauce,
@@ -139,9 +152,15 @@ exports.readOneById = (req, res, next) => {
   }
 
   Sauces.findById(id)
-    .then((sauce) => {
-      sauce.imageUrl = `${req.protocol}://${req.headers.host}${sauce.imageUrl}`;
-      res.json(sauce);
+    .then((sauceDatas) => {
+      const sauce = halson(sauceDatas._doc);
+      sauce
+        .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+        .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+        .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
+        .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` });
+
+      res.json({ ...sauce, imageUrl: `${req.protocol}://${req.headers.host}${sauceDatas.imageUrl}` });
     })
     .catch((error) => res.status(404).json(error));
 };
@@ -229,7 +248,8 @@ exports.delete = (req, res, next) => {
       try {
         await removeFromRelativePath(sauce.imageUrl);
         await Sauces.deleteOne({ _id: id });
-        res.status(200).json({ message: `Sauce ${id} deleted` });
+        const links = halson({}).addLink('readAll', { method: 'GET', href: `${process.env.apiBaseDir}/sauces` });
+        res.status(200).json({ message: `Sauce ${id} deleted`, ...links });
       } catch (e) {
         return res.status(500).send();
       }
