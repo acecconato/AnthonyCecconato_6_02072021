@@ -36,23 +36,21 @@ exports.upload = async (file) => {
  * Depends on express-fileupload
  * @param filePathToReplace
  * @param newFile File object (express-fileupload)
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>}
  */
 exports.replace = async (filePathToReplace, newFile) => {
   const absoluteFilePathToReplace = path.join(__dirname, '..', '..', filePathToReplace);
   const absoluteDirPath = absoluteFilePathToReplace.replace(path.basename(absoluteFilePathToReplace), '');
 
-  if (!fs.existsSync(absoluteFilePathToReplace)) {
-    throw new Error('Unable to resolve the uploads directory');
+  if (fs.existsSync(absoluteFilePathToReplace)) {
+    // Delete the old file
+    fs.unlinkSync(absoluteFilePathToReplace);
   }
 
   const ext = mime.extension(newFile.mimetype);
   const generatedFilename = `${uuid.v4()}.${ext}`;
   newFile.path = path.join(absoluteDirPath, generatedFilename);
   newFile.name = generatedFilename;
-
-  // Delete the old file
-  fs.unlinkSync(absoluteFilePathToReplace);
 
   // Upload the new file
   await newFile.mv(newFile.path, (err) => {
@@ -71,7 +69,7 @@ exports.removeFromRelativePath = async (relativePath) => {
   const absPath = path.join(__dirname, '..', '..', relativePath);
 
   if (!fs.existsSync(absPath)) {
-    throw new Error('Unable to resolve the file path');
+    return false;
   }
 
   fs.unlinkSync(absPath);
