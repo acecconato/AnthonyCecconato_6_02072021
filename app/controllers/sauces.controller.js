@@ -1,4 +1,5 @@
 const halson = require('halson');
+const sanitize = require('mongo-sanitize');
 
 const Sauces = require('../models/sauces.model');
 const { upload, replace, removeFromRelativePath } = require('../services/fileUpload');
@@ -31,12 +32,12 @@ exports.create = async (req, res) => {
   }
 
   const newSauce = new Sauces({
-    userId: req.user._id,
-    name: sauceObject.name,
-    manufacturer: sauceObject.manufacturer,
-    description: sauceObject.description,
-    mainPepper: sauceObject.mainPepper,
-    heat: sauceObject.heat,
+    userId: sanitize(req.user._id),
+    name: sanitize(sauceObject.name),
+    manufacturer: sanitize(sauceObject.manufacturer),
+    description: sanitize(sauceObject.description),
+    mainPepper: sanitize(sauceObject.mainPepper),
+    heat: sanitize(sauceObject.heat),
   });
 
   upload(image)
@@ -80,11 +81,11 @@ exports.update = (req, res, next) => {
   Sauces.findById(req.params.id)
 
     .then(async (sauce) => {
-      sauce.name = sauceObject.name;
-      sauce.manufacturer = sauceObject.manufacturer;
-      sauce.description = sauceObject.description;
-      sauce.mainPepper = sauceObject.mainPepper;
-      sauce.heat = sauceObject.heat;
+      sauce.name = sanitize(sauceObject.name);
+      sauce.manufacturer = sanitize(sauceObject.manufacturer);
+      sauce.description = sanitize(sauceObject.description);
+      sauce.mainPepper = sanitize(sauceObject.mainPepper);
+      sauce.heat = sanitize(sauceObject.heat);
 
       try {
         if (image) {
@@ -145,7 +146,7 @@ exports.readAll = (req, res) => {
  * @returns {*}
  */
 exports.readOneById = (req, res, next) => {
-  const { id } = req.params;
+  const id = sanitize(req.params.id);
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
     return next();
@@ -173,7 +174,7 @@ exports.readOneById = (req, res, next) => {
  * @returns {*}
  */
 exports.handleLike = (req, res, next) => {
-  const { id } = req.params;
+  const id = sanitize(req.params.id);
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
     return next();
@@ -182,7 +183,8 @@ exports.handleLike = (req, res, next) => {
   // Get the sauce then update the likes / dislikes
   Sauces.findById(id)
     .then((sauce) => {
-      const { userId, like } = req.body;
+      const userId = sanitize(req.body.userId);
+      const like = sanitize(req.body.like);
 
       if (!userId || like === undefined) {
         return res.status(422).send();
@@ -237,7 +239,7 @@ exports.handleLike = (req, res, next) => {
  * @returns {*}
  */
 exports.delete = (req, res, next) => {
-  const { id } = req.params;
+  const id = sanitize(req.params.id);
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
     return next();

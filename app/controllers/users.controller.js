@@ -1,3 +1,5 @@
+const sanitize = require('mongo-sanitize');
+
 const { generateToken } = require('../services/utils');
 const Users = require('../models/users.model');
 
@@ -8,8 +10,8 @@ const Users = require('../models/users.model');
  */
 exports.signup = (req, res) => {
   const user = new Users({
-    email: req.body.email,
-    password: req.body.password,
+    email: sanitize(req.body.email),
+    password: sanitize(req.body.password),
   });
 
   user.save()
@@ -23,14 +25,19 @@ exports.signup = (req, res) => {
  * @param res
  */
 exports.login = (req, res) => {
-  const email = (req.body.email) ? req.body.email.toLowerCase() : undefined;
+  const email = (req.body.email) ? sanitize(req.body.email).toLowerCase() : undefined;
+  const password = sanitize(req.body.password);
+
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(422).send();
+  }
 
   Users.findOne({ email }, async (error, user) => {
     if (error) {
       return res.json(error);
     }
 
-    if (!user || !await user.comparePassword(req.body.password)) {
+    if (!user || !await user.comparePassword(password)) {
       return res.status(401).json('Authentication failed');
     }
 
