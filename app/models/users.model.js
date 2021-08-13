@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 const argon2 = require('argon2');
+const encrypt = require('mongoose-encryption');
+
+const encryptionKey = process.env.ENCRYPTION_32BYTE;
+const signingKey = process.env.ENCRYPTION_64BYTE;
 
 const { validateEmail, isPasswordInDataBreaches, isStrongPassword } = require('../services/validator');
 
@@ -12,6 +16,7 @@ const usersSchema = new mongoose.Schema({
     validate: validateEmail,
     lowercase: true,
     trim: true,
+    maxlength: 50,
   },
   password: {
     type: String,
@@ -44,7 +49,7 @@ usersSchema.pre('save', async function (next) {
 });
 
 /**
- * Check if the password match
+ * Add a user's method to check if a password match
  * @param plainPassword
  * @returns {Promise<boolean>}
  */
@@ -52,6 +57,10 @@ usersSchema.methods.comparePassword = async function (plainPassword) {
   return argon2.verify(this.password, plainPassword);
 };
 
+// Prettier error message on unique error
 usersSchema.plugin(uniqueValidator);
+
+// Encrypt and decrypt datas
+usersSchema.plugin(encrypt, { encryptionKey, signingKey });
 
 module.exports = mongoose.model('users', usersSchema);

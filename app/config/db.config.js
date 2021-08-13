@@ -15,6 +15,7 @@ mongoose.connect(
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
+    ssl: true,
   },
 )
   .catch((error) => {

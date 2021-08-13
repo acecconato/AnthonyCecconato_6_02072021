@@ -1,4 +1,5 @@
 const halson = require('halson');
+const sanitize = require('mongo-sanitize');
 
 const Sauces = require('../models/sauces.model');
 const { upload, replace, removeFromRelativePath } = require('../services/fileUpload');
@@ -31,12 +32,12 @@ exports.create = async (req, res) => {
   }
 
   const newSauce = new Sauces({
-    userId: req.user._id,
-    name: sauceObject.name,
-    manufacturer: sauceObject.manufacturer,
-    description: sauceObject.description,
-    mainPepper: sauceObject.mainPepper,
-    heat: sauceObject.heat,
+    userId: sanitize(req.user._id),
+    name: sanitize(sauceObject.name),
+    manufacturer: sanitize(sauceObject.manufacturer),
+    description: sanitize(sauceObject.description),
+    mainPepper: sanitize(sauceObject.mainPepper),
+    heat: sanitize(sauceObject.heat),
   });
 
   upload(image)
@@ -51,7 +52,7 @@ exports.create = async (req, res) => {
             .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/like` })
             .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` });
           res.status(201).json({ message: `Sauce ${savedSauce._id} created`, savedSauce });
-        });
+        }).catch((error) => res.status(422).send({ error }));
     })
     .catch((error) => res.status(500).json(error));
 };
@@ -70,21 +71,36 @@ exports.update = (req, res, next) => {
     return next();
   }
 
-  const sauceObject = (req.files && req.files.image) ? { ...JSON.parse(req.body.sauce) } : req.body;
-  const image = (req.files && req.files.image) ? req.files.image : undefined;
+  let sauceObject;
+  let image;
 
-  if (!sauceObject) {
+  try {
+    sauceObject = (req.files && req.files.image) ? { ...JSON.parse(req.body.sauce) } : req.body;
+    image = (req.files && req.files.image) ? req.files.image : undefined;
+
+    if (req.body.sauce && !image) {
+      throw Error();
+    }
+
+    if (Object.keys(sauceObject).length < 1 && !image) {
+      throw Error('sauceObject or/and image is empty');
+    }
+  } catch (error) {
     return res.status(422).send();
   }
 
   Sauces.findById(req.params.id)
 
     .then(async (sauce) => {
-      sauce.name = sauceObject.name;
-      sauce.manufacturer = sauceObject.manufacturer;
-      sauce.description = sauceObject.description;
-      sauce.mainPepper = sauceObject.mainPepper;
-      sauce.heat = sauceObject.heat;
+      if (req.user._id !== sauce.userId) {
+        return res.status(403).send();
+      }
+
+      sauce.name = sanitize(sauceObject.name);
+      sauce.manufacturer = sanitize(sauceObject.manufacturer);
+      sauce.description = sanitize(sauceObject.description);
+      sauce.mainPepper = sanitize(sauceObject.mainPepper);
+      sauce.heat = sanitize(sauceObject.heat);
 
       try {
         if (image) {
@@ -92,7 +108,7 @@ exports.update = (req, res, next) => {
           sauce.imageUrl = generateImageUrl(image);
         }
 
-        const saveResult = await sauce.save();
+        const saveResult = await sauce.save().catch((error) => res.status(422).json({ error }));
 
         const savedSauce = halson(saveResult._doc)
           .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
@@ -104,9 +120,7 @@ exports.update = (req, res, next) => {
       } catch (error) {
         return res.status(500).json(error);
       }
-    })
-
-    .catch((error) => res.status(404).json(error));
+    }).catch((error) => res.status(404).json(error));
 };
 
 /**
@@ -145,7 +159,7 @@ exports.readAll = (req, res) => {
  * @returns {*}
  */
 exports.readOneById = (req, res, next) => {
-  const { id } = req.params;
+  const id = sanitize(req.params.id);
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
     return next();
@@ -173,7 +187,7 @@ exports.readOneById = (req, res, next) => {
  * @returns {*}
  */
 exports.handleLike = (req, res, next) => {
-  const { id } = req.params;
+  const id = sanitize(req.params.id);
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
     return next();
@@ -182,7 +196,8 @@ exports.handleLike = (req, res, next) => {
   // Get the sauce then update the likes / dislikes
   Sauces.findById(id)
     .then((sauce) => {
-      const { userId, like } = req.body;
+      const userId = sanitize(req.body.userId);
+      const like = sanitize(req.body.like);
 
       if (!userId || like === undefined) {
         return res.status(422).send();
@@ -237,7 +252,7 @@ exports.handleLike = (req, res, next) => {
  * @returns {*}
  */
 exports.delete = (req, res, next) => {
-  const { id } = req.params;
+  const id = sanitize(req.params.id);
 
   if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
     return next();
@@ -245,11 +260,14 @@ exports.delete = (req, res, next) => {
 
   Sauces.findById(id)
     .then(async (sauce) => {
+      if (req.user._id !== sauce.userId) {
+        return res.status(403).send();
+      }
+
       try {
         await removeFromRelativePath(sauce.imageUrl);
         await Sauces.deleteOne({ _id: id });
-        const links = halson({}).addLink('readAll', { method: 'GET', href: `${process.env.apiBaseDir}/sauces` });
-        res.status(200).json({ message: `Sauce ${id} deleted`, ...links });
+        res.status(200).json({ message: `Sauce ${id} deleted` });
       } catch (e) {
         return res.status(500).send();
       }
