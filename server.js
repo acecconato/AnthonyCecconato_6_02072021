@@ -6,6 +6,8 @@ const bearerToken = require('express-bearer-token');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const helmet = require('helmet');
+const fs = require('fs');
+const path = require('path');
 
 // Load .env configuration
 require('dotenv').config();
@@ -55,8 +57,14 @@ db.on('error', (error) => {
   process.exit(1);
 });
 
-// Output HTTP request in the console
-app.use(morgan('tiny'));
+// Output and log HTTP requests
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined', {
+    stream: fs.createWriteStream(path.join(__dirname, 'var/access.log'), { flags: 'a' }),
+  }));
+} else if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('combined'));
+}
 
 // Get request body's parameters
 app.use(bodyParser.urlencoded({ extended: true }));

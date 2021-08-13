@@ -47,3 +47,10 @@ exports.login = (req, res) => {
     });
   });
 };
+
+exports.readAll = (req, res) => {
+  Users.find()
+    .then((datas) => {
+      res.json(datas);
+    });
+};

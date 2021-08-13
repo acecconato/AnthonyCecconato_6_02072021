@@ -52,7 +52,7 @@ exports.create = async (req, res) => {
             .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/like` })
             .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` });
           res.status(201).json({ message: `Sauce ${savedSauce._id} created`, savedSauce });
-        });
+        }).catch((error) => res.status(422).send({ error }));
     })
     .catch((error) => res.status(500).json(error));
 };
@@ -71,16 +71,31 @@ exports.update = (req, res, next) => {
     return next();
   }
 
-  const sauceObject = (req.files && req.files.image) ? { ...JSON.parse(req.body.sauce) } : req.body;
-  const image = (req.files && req.files.image) ? req.files.image : undefined;
+  let sauceObject;
+  let image;
 
-  if (!sauceObject) {
+  try {
+    sauceObject = (req.files && req.files.image) ? { ...JSON.parse(req.body.sauce) } : req.body;
+    image = (req.files && req.files.image) ? req.files.image : undefined;
+
+    if (req.body.sauce && !image) {
+      throw Error();
+    }
+
+    if (Object.keys(sauceObject).length < 1 && !image) {
+      throw Error('sauceObject or/and image is empty');
+    }
+  } catch (error) {
     return res.status(422).send();
   }
 
   Sauces.findById(req.params.id)
 
     .then(async (sauce) => {
+      if (req.user._id !== sauce.userId) {
+        return res.status(403).send();
+      }
+
       sauce.name = sanitize(sauceObject.name);
       sauce.manufacturer = sanitize(sauceObject.manufacturer);
       sauce.description = sanitize(sauceObject.description);
@@ -93,7 +108,7 @@ exports.update = (req, res, next) => {
           sauce.imageUrl = generateImageUrl(image);
         }
 
-        const saveResult = await sauce.save();
+        const saveResult = await sauce.save().catch((error) => res.status(422).json({ error }));
 
         const savedSauce = halson(saveResult._doc)
           .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
@@ -105,9 +120,7 @@ exports.update = (req, res, next) => {
       } catch (error) {
         return res.status(500).json(error);
       }
-    })
-
-    .catch((error) => res.status(404).json(error));
+    }).catch((error) => res.status(404).json(error));
 };
 
 /**
@@ -247,11 +260,14 @@ exports.delete = (req, res, next) => {
 
   Sauces.findById(id)
     .then(async (sauce) => {
+      if (req.user._id !== sauce.userId) {
+        return res.status(403).send();
+      }
+
       try {
         await removeFromRelativePath(sauce.imageUrl);
         await Sauces.deleteOne({ _id: id });
-        const links = halson({}).addLink('readAll', { method: 'GET', href: `${process.env.apiBaseDir}/sauces` });
-        res.status(200).json({ message: `Sauce ${id} deleted`, ...links });
+        res.status(200).json({ message: `Sauce ${id} deleted` });
       } catch (e) {
         return res.status(500).send();
       }
