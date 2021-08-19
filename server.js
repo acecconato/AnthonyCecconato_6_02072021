@@ -60,7 +60,7 @@ db.on('error', (error) => {
 // Output and log HTTP requests
 if (process.env.NODE_ENV === 'production') {
   app.use(morgan('combined', {
-    stream: fs.createWriteStream(path.join(__dirname, 'var/access.log'), { flags: 'a' }),
+    stream: fs.createWriteStream(path.join(__dirname, 'var/logs/access.log'), { flags: 'a' }),
   }));
 } else if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));

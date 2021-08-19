@@ -5,6 +5,7 @@ const router = express.Router();
 
 const usersRoutes = require('./users.routes');
 const saucesRoutes = require('./sauces.routes');
+const gdprRoutes = require('./gdpr.routes');
 
 const authMiddleware = require('../middlewares/auth.middleware');
 
@@ -16,5 +17,6 @@ const speedLimiter = slowDown({
 
 router.use('/auth', speedLimiter, usersRoutes);
 router.use('/sauces', speedLimiter, authMiddleware, saucesRoutes);
+router.use('/gdpr', speedLimiter, authMiddleware, gdprRoutes);
 
 module.exports = router;
