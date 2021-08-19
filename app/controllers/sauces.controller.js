@@ -1,5 +1,6 @@
 const halson = require('halson');
 const sanitize = require('mongo-sanitize');
+const { ObjectId } = require('mongoose').Types;
 
 const Sauces = require('../models/sauces.model');
 const { upload, replace, removeFromRelativePath } = require('../services/fileUpload');
@@ -13,7 +14,7 @@ const USER_CANCELED = 0;
  * Create a new sauce
  * @param req
  * @param res
- * @returns {Promise<void>}
+ * @returns {Promise<*>}
  */
 exports.create = async (req, res) => {
   const { sauce } = req.body;
@@ -50,7 +51,9 @@ exports.create = async (req, res) => {
             .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
             .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
             .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/like` })
-            .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` });
+            .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
+            .addLink('report', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/report` });
+
           res.status(201).json({ message: `Sauce ${savedSauce._id} created`, savedSauce });
         }).catch((error) => res.status(422).send({ error }));
     })
@@ -65,9 +68,9 @@ exports.create = async (req, res) => {
  * @returns {*}
  */
 exports.update = (req, res, next) => {
-  const { id } = req.params;
+  const id = sanitize(req.params.id);
 
-  if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
+  if (!id || !ObjectId.isValid(id)) {
     return next();
   }
 
@@ -114,7 +117,8 @@ exports.update = (req, res, next) => {
           .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
           .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
           .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/like` })
-          .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` });
+          .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}` })
+          .addLink('report', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/report` });
 
         return res.status(200).json({ message: `Sauce ${id} updated`, savedSauce });
       } catch (error) {
@@ -129,25 +133,25 @@ exports.update = (req, res, next) => {
  * @param req
  * @param res
  */
-exports.readAll = (req, res) => {
-  Sauces.find()
-    .then((datas) => {
-      const sauces = datas.map((sauceDatas) => {
-        const sauce = halson(sauceDatas._doc);
-        sauce
-          .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
-          .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
-          .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
-          .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` });
+exports.readAll = async (req, res) => {
+  const datas = await Sauces.find().catch((e) => res.status(500).json(e));
 
-        return {
-          ...sauce,
-          imageUrl: `${process.env.baseDir}${sauceDatas.imageUrl}`,
-        };
-      });
-      return res.json(sauces);
-    })
-    .catch((error) => res.status(400).json(error));
+  const sauces = datas.map((sauceDatas) => {
+    const sauce = halson(sauceDatas._doc);
+    sauce
+      .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+      .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+      .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
+      .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+      .addLink('report', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/report` });
+
+    return {
+      ...sauce,
+      imageUrl: `${process.env.baseDir}${sauceDatas.imageUrl}`,
+    };
+  });
+
+  return res.json(sauces);
 };
 
 /**
@@ -158,25 +162,28 @@ exports.readAll = (req, res) => {
  * @param next
  * @returns {*}
  */
-exports.readOneById = (req, res, next) => {
+exports.readOneById = async (req, res, next) => {
   const id = sanitize(req.params.id);
 
-  if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
+  if (!id || !ObjectId.isValid(id)) {
     return next();
   }
 
-  Sauces.findById(id)
-    .then((sauceDatas) => {
-      const sauce = halson(sauceDatas._doc);
-      sauce
-        .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
-        .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
-        .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
-        .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` });
+  const sauceDatas = await Sauces.findById(id).catch((e) => res.status(500).json(e));
 
-      res.json({ ...sauce, imageUrl: `${req.protocol}://${req.headers.host}${sauceDatas.imageUrl}` });
-    })
-    .catch((error) => res.status(404).json(error));
+  if (!sauceDatas) {
+    return res.status(404).json({ message: 'Sauce not found' });
+  }
+
+  const sauce = halson(sauceDatas._doc);
+  sauce
+    .addLink('self', { method: 'GET', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+    .addLink('update', { method: 'PUT', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+    .addLink('like', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/like` })
+    .addLink('delete', { method: 'DELETE', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}` })
+    .addLink('report', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${sauceDatas._id}/report` });
+
+  return res.json({ ...sauce, imageUrl: `${req.protocol}://${req.headers.host}${sauceDatas.imageUrl}` });
 };
 
 /**
@@ -186,62 +193,84 @@ exports.readOneById = (req, res, next) => {
  * @param next
  * @returns {*}
  */
-exports.handleLike = (req, res, next) => {
+exports.handleLike = async (req, res, next) => {
   const id = sanitize(req.params.id);
 
-  if (!id || !id.match(/^[0-9a-zA-Z]+$/)) {
+  if (!id || !ObjectId.isValid(id)) {
     return next();
   }
 
-  // Get the sauce then update the likes / dislikes
-  Sauces.findById(id)
-    .then((sauce) => {
-      const userId = sanitize(req.body.userId);
-      const like = sanitize(req.body.like);
+  const sauce = await Sauces.findById(id).catch((e) => res.status(500).json(e));
 
-      if (!userId || like === undefined) {
-        return res.status(422).send();
+  if (!sauce) {
+    return res.status(404).json({ message: 'Sauce not found' });
+  }
+
+  const userId = sanitize(req.body.userId);
+  const like = sanitize(req.body.like);
+
+  if (!userId || typeof like !== 'number') {
+    return res.status(422).json();
+  }
+
+  switch (parseInt(like)) {
+    // DISLIKE
+    case USER_DISLIKED:
+
+      // If the sauce was previously liked by the user
+      if (sauce.usersLiked.includes(userId)) {
+        sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
+        sauce.likes -= 1;
       }
 
-      switch (parseInt(like)) {
-        // DISLIKE
-        case USER_DISLIKED:
-          (sauce.usersLiked.includes(userId)) ? sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1) : null;
-          (sauce.usersDisliked.indexOf(userId) === -1) ? sauce.usersDisliked.push(userId) : null;
-          sauce.dislikes += 1;
-          break;
-
-        // UNLIKE / UNDISLIKE
-        case USER_CANCELED:
-          // If the sauce was liked
-          if (sauce.usersLiked.includes(userId)) {
-            sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
-            sauce.likes -= 1;
-          }
-
-          // If the sauce was disliked
-          if (sauce.usersDisliked.includes(userId)) {
-            sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
-            sauce.dislikes -= 1;
-          }
-          break;
-
-        // LIKE
-        case USER_LIKED:
-          (sauce.usersDisliked.includes(userId)) ? sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1) : null;
-          (sauce.usersLiked.indexOf(userId) === -1) ? sauce.usersLiked.push(userId) : null;
-          sauce.likes += 1;
-          break;
-
-        default:
-          return next();
+      // If the sauce is not already disliked by the user
+      if (sauce.usersDisliked.indexOf(userId) === -1) {
+        sauce.usersDisliked.push(userId);
+        sauce.dislikes += 1;
       }
 
-      sauce.save()
-        .then(() => res.status(204).send())
-        .catch((error) => res.status(500).json(error));
-    })
-    .catch((error) => res.status(404).json(error));
+      break;
+
+    // UNLIKE / UNDISLIKE
+    case USER_CANCELED:
+
+      // If the sauce was previously liked
+      if (sauce.usersLiked.includes(userId)) {
+        sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
+        sauce.likes -= 1;
+      }
+
+      // If the sauce was previously disliked
+      if (sauce.usersDisliked.includes(userId)) {
+        sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
+        sauce.dislikes -= 1;
+      }
+
+      break;
+
+    // LIKE
+    case USER_LIKED:
+
+      // If the sauce was previously disliked by the user
+      if (sauce.usersDisliked.includes(userId)) {
+        sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
+        sauce.dislikes -= 1;
+      }
+
+      // If the sauce is not already liked by the user
+      if (sauce.usersLiked.indexOf(userId) === -1) {
+        sauce.usersLiked.push(userId);
+        sauce.likes += 1;
+      }
+
+      break;
+
+    default:
+      return next();
+  }
+
+  await sauce.save().catch((e) => res.status(500).json(e));
+  return res.status(204).send();
 };
 
 /**
@@ -274,4 +303,31 @@ exports.delete = (req, res, next) => {
     })
 
     .catch(() => res.status(404).send());
+};
+
+/**
+ * Report a sauce
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+exports.sauceReport = async (req, res, next) => {
+  const id = sanitize(req.params.id);
+
+  if (!id || !ObjectId.isValid(id)) {
+    return next();
+  }
+
+  const sauce = await Sauces.findById(id).catch((e) => res.status(500).json(e));
+
+  if (!sauce) {
+    return res.status(404).json({ message: 'Sauce not found' });
+  }
+
+  sauce.report = sauce.report += 1;
+
+  await sauce.save().catch((e) => res.status(500).json(e));
+
+  res.status(200).json({ message: 'Sauce has been reported' });
 };

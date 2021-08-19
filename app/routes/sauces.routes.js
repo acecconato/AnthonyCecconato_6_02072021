@@ -11,6 +11,7 @@ router.get('/:id', saucesController.readOneById);
 
 router.post('/', imageValidatorMiddleware, saucesController.create);
 router.post('/:id/like', saucesController.handleLike);
+router.post('/:id/report', saucesController.sauceReport);
 
 router.put('/:id', imageValidatorMiddleware, saucesController.update);
 

@@ -32,6 +32,7 @@
     "halson": "^3.0.0",
     "helmet": "^4.6.0",
     "hibp": "^11.0.0",
+    "json2csv": "^5.0.6",
     "jsonwebtoken": "^8.5.1",
     "mime-types": "^2.1.32",
     "mongo-sanitize": "^1.1.0",

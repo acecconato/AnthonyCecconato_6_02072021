@@ -10,7 +10,4 @@ router.get('/export-my-data', gdprController.exportMyData);
 
 router.put('/update-my-password', gdprController.updateMyPassword);
 
-router.post('/report-user/:id', gdprController.userReport);
-router.post('/report-sauce/:id', gdprController.sauceReport);
-
 module.exports = router;
