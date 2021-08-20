@@ -1,6 +1,7 @@
 const halson = require('halson');
 const sanitize = require('mongo-sanitize');
 const { Parser } = require('json2csv');
+const { LocalStorage } = require('node-localstorage');
 
 const Users = require('../models/users.model');
 
@@ -40,6 +41,9 @@ exports.deleteMyAccount = async (req, res) => {
   if (!deletedUser) {
     return res.status(404).send();
   }
+
+  const localStorage = new LocalStorage('./var/storage/blacklisted_jwt');
+  localStorage.setItem(deletedUser._id, req.token);
 
   return res.status(204).send();
 };
