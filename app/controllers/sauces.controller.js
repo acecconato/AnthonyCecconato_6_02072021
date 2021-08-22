@@ -96,7 +96,7 @@ exports.update = (req, res, next) => {
 
     .then(async (sauce) => {
       if (req.user._id !== sauce.userId) {
-        return res.status(403).send();
+        return res.status(403).json('You are not the owner of this itemd');
       }
 
       sauce.name = sanitize(sauceObject.name);
@@ -290,7 +290,7 @@ exports.delete = (req, res, next) => {
   Sauces.findById(id)
     .then(async (sauce) => {
       if (req.user._id !== sauce.userId) {
-        return res.status(403).send();
+        return res.status(403).json('You are not the owner of this item');
       }
 
       try {
