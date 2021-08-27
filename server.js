@@ -8,6 +8,8 @@ const fileUpload = require('express-fileupload');
 const helmet = require('helmet');
 const fs = require('fs');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 
 // Load .env configuration
 require('dotenv').config();
@@ -22,6 +24,10 @@ const PORT = process.env.APP_PORT || 3000;
 
 // Load express
 const app = express();
+
+// Load documentation
+const swaggerDocument = YAML.load('./docs/swagger.yaml');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Helmet for default security
 app.use(helmet());
@@ -87,3 +93,4 @@ app.use(process.env.API_URL, require('./app/routes'));
 app.all('*', (req, res) => {
   res.status(404).json('Resource not found');
 });
+  
