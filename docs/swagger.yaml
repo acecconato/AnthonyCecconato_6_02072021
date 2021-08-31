@@ -152,6 +152,8 @@ paths:
                 report: 0
                 _id: '6125535f4066323cd5788255'
                 email: 'demo@demo.fr'
+        400:
+          description: "Bad Request"
         401:
           description: "Unauthorized"
         403:

@@ -61,7 +61,22 @@ exports.updateMyPassword = async (req, res) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  user.password = sanitize(req.body.password) || '';
+  const oldPassword = sanitize(req.body.old_password);
+  const newPassword = sanitize(req.body.new_password);
+
+  if (!oldPassword || !newPassword) {
+    return res.status(422).send();
+  }
+
+  if (!await user.comparePassword(oldPassword)) {
+    return res.status(401).json({ error: 'The old password is invalid' });
+  }
+
+  if (oldPassword === newPassword) {
+    return res.status(400).json({ error: 'Passwords are identicals' });
+  }
+
+  user.password = newPassword;
 
   const saveResult = await user.save().catch((e) => res.status(500).json(e));
 
