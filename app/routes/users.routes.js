@@ -1,7 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../../var/auth_limit_reached.log'));
+const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, '../../var/logs/auth_limit_reached.log'));
 
 const router = express.Router();
 
@@ -18,8 +18,6 @@ const loginLimiter = rateLimit({
     });
   },
 });
-
-router.get('/', usersController.readAll);
 
 router.post('/login', loginLimiter, usersController.login);
 

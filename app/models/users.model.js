@@ -18,16 +18,23 @@ const usersSchema = new mongoose.Schema({
     trim: true,
     maxlength: 50,
   },
+
   password: {
     type: String,
     required: true,
     minlength: 8,
-    maxlength: 64,
+    maxlength: 255,
     trim: true,
     validate: [
       { validator: isPasswordInDataBreaches, message: 'Password is listed in data breaches, you must change it' },
       { validator: isStrongPassword, message: 'Password is too weak' },
     ],
+  },
+
+  report: {
+    type: Number,
+    trim: true,
+    default: 0,
   },
 });
 
@@ -61,6 +68,6 @@ usersSchema.methods.comparePassword = async function (plainPassword) {
 usersSchema.plugin(uniqueValidator);
 
 // Encrypt and decrypt datas
-usersSchema.plugin(encrypt, { encryptionKey, signingKey });
+usersSchema.plugin(encrypt, { encryptionKey, signingKey, excludeFromEncryption: ['report'] });
 
 module.exports = mongoose.model('users', usersSchema);
