@@ -17,9 +17,13 @@ exports.isPasswordInDataBreaches = async (plainPassword) => {
  * @param plainPassword
  * @returns {boolean}
  */
-exports.isStrongPassword = (plainPassword) => {
+exports.isStrongPassword = async (plainPassword) => {
   const strength = passwordStrength.test(plainPassword);
-  return strength.errors.length < 1;
+  if (strength.errors.length < 1) {
+    return true;
+  }
+
+  throw new Error(strength.errors.join(' '));
 };
 
 /**
