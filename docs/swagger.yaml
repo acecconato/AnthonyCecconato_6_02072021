@@ -1,0 +1,516 @@
+swagger: "2.0"
+info:
+  title: "So Pekocko"
+  description: "So Pekocko API documentation"
+  version: "1.0"
+  contact:
+    email: "antho.cecc@gmail.com"
+
+host: "localhost:3000"
+basePath: /api
+
+schemes:
+  - http
+  - https
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+
+tags:
+  - name: GDPR
+    description: "Everything about the General Data Protection Regulation"
+
+paths:
+
+  /auth/login:
+    post:
+      tags: ["Authentication"]
+      summary: "Login as a user"
+      parameters:
+        - in: body
+          name: "Credentials"
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+            required:
+              - email
+              - password
+            example:
+              email: "demo@demo.fr"
+              password: "aStrongPassword@0"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+              token:
+                type: object
+            example:
+              userId: '6125535f4066323cd5788255'
+              token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlbW9AZGVtby5mciIsIl9pZCI6IjYxMjU1MzVmNDA2NjMyM2NkNTc4ODI1NSIsInVzZXJJZCI6IjYxMjU1MzVmNDA2NjMyM2NkNTc4ODI1NSIsImlhdCI6MTYyOTgzNjEyOSwiZXhwIjoxNjI5OTIyNTI5fQ.MYaY1OxXDX6p_qa25YNgZWP7VtoL3NZm4wxdW4c0rYI'
+        401:
+          description: "Unauthorized"
+        422:
+          description: "Unprocessable entity"
+        429:
+          description: "Too Many Requests"
+        500:
+          description: "Internal server error"
+
+  /auth/signup:
+    post:
+      tags: ["Authentication"]
+      summary: "Create a new user account"
+      parameters:
+        - in: body
+          name: "User"
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+            required:
+              - email
+              - password
+            example:
+              email: "demo@demo.fr"
+              password: "aStrongPassword@0"
+      responses:
+        201:
+          description: "Created"
+        400:
+          description: "Bad Request"
+
+  /gdpr/delete-my-account:
+    delete:
+      security:
+        - Bearer: []
+      tags: ["GDPR"]
+      description: "Delete the user account, based on the current json web token in use. \nAlso blacklist the token."
+      summary: "Delete my account"
+      responses:
+        204:
+          description: "No Content"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+  /gdpr/update-my-password:
+    put:
+      security:
+        - Bearer: []
+      tags: ["GDPR"]
+      summary: "Update my password"
+      parameters:
+        - in: body
+          name: "Object"
+          schema:
+            type: object
+            properties:
+              old_password:
+                type: string
+              new_password:
+                type: string
+            required:
+              - old_password
+              - new_password
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              savedUser:
+                type: object
+            example:
+              message: Password updated
+              savedUser:
+                report: 0
+                _id: '6125535f4066323cd5788255'
+                email: 'demo@demo.fr'
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+  /gdpr/export-my-data:
+    get:
+      security:
+        - Bearer: []
+      produces:
+        - text/csv
+      tags: ['GDPR']
+      summary: "Export my data in a CSV file"
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+  /sauces:
+    get:
+      tags: ['Sauces']
+      security:
+        - Bearer: []
+      summary: List all sauces
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: array
+            items:
+              allOf:
+                - $ref: '#/definitions/Sauces'
+                - type: object
+                  properties:
+                    imageUrl:
+                      type: string
+                      items:
+                        type: string
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+    post:
+      tags: ['Sauces']
+      security:
+        - Bearer: []
+      summary: Create a new sauce
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: sauce
+          type: string
+          required: true
+          default: '{"name":"Name","manufacturer":"Manufacturer","description":"Description","mainPepper":"Main Pepper","heat":"5"}'
+
+        - in: formData
+          name: image
+          type: file
+          description: "Only accept jpg and png files"
+          required: true
+
+      responses:
+        201:
+          description: "Created"
+          schema:
+            allOf:
+              - $ref: '#/definitions/Sauces'
+              - type: object
+                properties:
+                  imageUrl:
+                    type: string
+        400:
+          description: "Bad Request"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        422:
+          description: "Unprocessable Entity"
+        500:
+          description: "Internal server error"
+
+  /sauces/{id}:
+    get:
+      tags: ["Sauces"]
+      security:
+        - Bearer: []
+      summary: "Get a sauce by ID"
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+
+      responses:
+        200:
+          description: "OK"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Sauces"
+              - type: object
+                properties:
+                  imageUrl:
+                    type: string
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+    put:
+      tags: ["Sauces"]
+      security:
+        - Bearer: []
+      summary: "Update a sauce"
+      description: "You need to be the owner of the sauce to do that"
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+
+        - in: formData
+          name: sauce
+          type: string
+          required: true
+          default: '{"name":"Name","manufacturer":"Manufacturer","description":"Description","mainPepper":"Main Pepper","heat":"5"}'
+
+        - in: formData
+          name: image
+          type: file
+          description: "Only accept jpg and png files"
+          required: true
+
+      responses:
+        200:
+          description: "OK"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Sauces"
+              - type: object
+                properties:
+                  imageUrl:
+                    type: string
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        422:
+          description: "Unprocessable Entity"
+        500:
+          description: "Internal server error"
+
+    delete:
+      tags: ["Sauces"]
+      security:
+        - Bearer: []
+      summary: "Delete a sauce"
+      description: "You need to be the owner of the sauce"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+
+  /sauces/{id}/like:
+    post:
+      tags: ["Sauces"]
+      security:
+        - Bearer: []
+      summary: "Like a sauce"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "Sauce ID to like/dislike"
+
+        - in: body
+          name: object
+          schema:
+            type: object
+            required:
+              - userId
+              - like
+            properties:
+              userId:
+                type: string
+              like:
+                type: number
+                default: 0
+
+      responses:
+        204:
+          description: "No Content"
+        422:
+          description: "Unprocessable Entity"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+  /sauces/{id}/report:
+    post:
+      tags: ["Sauces"]
+      security:
+        - Bearer: []
+      summary: "Report a sauce"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "Sauce ID to report"
+
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+  /users/{id}/report:
+    post:
+      tags: ["Users"]
+      security:
+        - Bearer: []
+      summary: "Report a user"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "User ID to report"
+
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+        500:
+          description: "Internal server error"
+
+definitions:
+  Users:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      report:
+        type: number
+        default: 0
+    required: [email, password]
+
+  Sauces:
+    properties:
+      _id:
+        type: string
+      userId:
+        type: string
+      name:
+        type: string
+        maxLength: 30
+      manufacturer:
+        type: string
+        maxLength: 30
+      description:
+        type: string
+        maxLength: 255
+      mainPepper:
+        type: string
+        maxLength: 30
+      imageUrl:
+        type: string
+      heat:
+        type: number
+      likes:
+        type: number
+        default: 0
+      dislikes:
+        type: number
+        default: 0
+      usersLiked:
+        type: array
+        default: []
+        items:
+          type: string
+      usersDisliked:
+        type: array
+        default: []
+        items:
+          type: string
+      report:
+        default: 0
+        type: number
+    required:
+      - userId
+      - name
+      - manufacturer
+      - description
+      - mainPepper
+      - heat
+      - likes
+      - dislikes
+      - usersLiked
+      - usersDisliked
+
