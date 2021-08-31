@@ -386,8 +386,13 @@ paths:
                 default: 0
 
       responses:
-        204:
-          description: "No Content"
+        200:
+          description: "OK"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
         422:
           description: "Unprocessable Entity"
         401:

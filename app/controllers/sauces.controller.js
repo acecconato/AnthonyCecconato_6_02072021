@@ -210,12 +210,15 @@ exports.handleLike = async (req, res, next) => {
   const like = sanitize(req.body.like);
 
   if (!userId || typeof like !== 'number') {
-    return res.status(422).json();
+    return res.status(422).send();
   }
 
+  let message;
   switch (parseInt(like)) {
     // DISLIKE
     case USER_DISLIKED:
+
+      message = `Sauce ${sauce.name} is already disliked`;
 
       // If the sauce was previously liked by the user
       if (sauce.usersLiked.includes(userId)) {
@@ -227,6 +230,7 @@ exports.handleLike = async (req, res, next) => {
       if (sauce.usersDisliked.indexOf(userId) === -1) {
         sauce.usersDisliked.push(userId);
         sauce.dislikes += 1;
+        message = `Sauce ${sauce.name} disliked`;
       }
 
       break;
@@ -234,22 +238,28 @@ exports.handleLike = async (req, res, next) => {
     // UNLIKE / UNDISLIKE
     case USER_CANCELED:
 
+      message = `Sauce ${sauce.name} was not already liked or disliked`;
+
       // If the sauce was previously liked
       if (sauce.usersLiked.includes(userId)) {
         sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
         sauce.likes -= 1;
+        message = `Sauce ${sauce.name} unliked`;
       }
 
       // If the sauce was previously disliked
       if (sauce.usersDisliked.includes(userId)) {
         sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
         sauce.dislikes -= 1;
+        message = `Sauce ${sauce.name} undisliked`;
       }
 
       break;
 
     // LIKE
     case USER_LIKED:
+
+      message = `Sauce ${sauce.name} is already liked`;
 
       // If the sauce was previously disliked by the user
       if (sauce.usersDisliked.includes(userId)) {
@@ -261,6 +271,7 @@ exports.handleLike = async (req, res, next) => {
       if (sauce.usersLiked.indexOf(userId) === -1) {
         sauce.usersLiked.push(userId);
         sauce.likes += 1;
+        message = `Sauce ${sauce.name} liked`;
       }
 
       break;
@@ -269,8 +280,14 @@ exports.handleLike = async (req, res, next) => {
       return next();
   }
 
-  await sauce.save().catch((e) => res.status(500).json(e));
-  return res.status(204).send();
+  await Sauces.updateOne({ _id: sauce._id }, {
+    likes: sauce.likes,
+    dislikes: sauce.dislikes,
+    usersLiked: sauce.usersLiked,
+    usersDisliked: sauce.usersDisliked,
+  }, { runValidators: true }).catch((e) => res.status(500).json(e));
+
+  return res.status(200).json({ message });
 };
 
 /**
