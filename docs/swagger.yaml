@@ -459,24 +459,30 @@ paths:
 definitions:
   Users:
     properties:
+      _id:
+        type: string
+        unique: true
       email:
         type: string
+        unique: true
       password:
         type: string
       report:
         type: number
         default: 0
-    required: [email, password]
+    required: [_id, email, password]
 
   Sauces:
     properties:
       _id:
         type: string
+        unique: true
       userId:
         type: string
       name:
         type: string
         maxLength: 30
+        unique: true
       manufacturer:
         type: string
         maxLength: 30
@@ -510,6 +516,7 @@ definitions:
         default: 0
         type: number
     required:
+      - _id
       - userId
       - name
       - manufacturer
