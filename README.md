@@ -21,3 +21,17 @@
 # Launch the application
 
 > npm run serve
+
+# Documentation
+
+> SwaggerUI documentation is accesible on http://localhost:3000/api-docs by default.
+> 
+> You need to register, login, copy the returned json web token and paste it to the Authorization. 
+> 
+> The value should begin by: **Bearer** JWT.
+
+# Good to know
+
+- Uploaded images are going to the UPLOAD_DIR folder ; **/public/uploads** by default
+- Log files are located in the **/var/logs** folder
+- In development mode, errors are displayed in the console
