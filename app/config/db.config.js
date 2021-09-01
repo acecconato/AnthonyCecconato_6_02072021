@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
+const mongodbErrorHandler = require('mongoose-mongodb-errors');
 
 const progress = require('../services/progress');
 
 progress.start('Connecting to the database');
+
+mongoose.plugin(mongodbErrorHandler);
 
 if (!process.env.DB_URL) {
   progress.fail('Database connexion failed: DB_URL not found. Have you created the .env file?');
