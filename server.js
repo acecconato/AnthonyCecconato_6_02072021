@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname, './var/logs/errors.log'));
 
 // Load .env configuration
 require('dotenv').config();
@@ -60,6 +61,7 @@ db.once('open', () => {
 // Handle database errors
 db.on('error', (error) => {
   progress.fail(`Database connexion error: ${error}`);
+  log.error({ message: 'Database error occured', error });
   process.exit(1);
 });
 
@@ -93,4 +95,3 @@ app.use(process.env.API_URL, require('./app/routes'));
 app.all('*', (req, res) => {
   res.status(404).json('Resource not found');
 });
-  
