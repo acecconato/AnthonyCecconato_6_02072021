@@ -55,7 +55,7 @@ exports.create = async (req, res) => {
             .addLink('report', { method: 'POST', href: `${process.env.apiBaseDir}/sauces/${saveResult._id}/report` });
 
           res.status(201).json({ message: `Sauce ${savedSauce._id} created`, savedSauce });
-        }).catch((error) => res.status(422).send({ error }));
+        }).catch((error) => res.status(422).json({ error }));
     })
     .catch((error) => res.status(500).json(error));
 };
