@@ -2,18 +2,22 @@ const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 const argon2 = require('argon2');
 const encrypt = require('mongoose-encryption');
+const validator = require('validator');
 
 const encryptionKey = process.env.ENCRYPTION_32BYTE;
 const signingKey = process.env.ENCRYPTION_64BYTE;
 
-const { validateEmail, isPasswordInDataBreaches, isStrongPassword } = require('../services/validator');
+const { isPasswordInDataBreaches, isStrongPassword } = require('../services/validator');
 
 const usersSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
     unique: true,
-    validate: validateEmail,
+    validate: {
+      validator: (v) => validator.isEmail(v),
+      message: (props) => `${props.value} is not a valid email`,
+    },
     lowercase: true,
     trim: true,
     maxlength: 50,

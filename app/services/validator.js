@@ -1,4 +1,3 @@
-const validate = require('mongoose-validator');
 const { pwnedPassword } = require('hibp');
 const passwordStrength = require('owasp-password-strength-test');
 
@@ -25,14 +24,3 @@ exports.isStrongPassword = async (plainPassword) => {
 
   throw new Error(strength.errors.join(' '));
 };
-
-/**
- * Validate email address
- * @type {(*|({validator: function(*=): (boolean|*), message: string} & *))[]}
- */
-exports.validateEmail = [
-  validate({
-    validator: 'isEmail',
-    message: 'Email should have a valid syntax',
-  }),
-];

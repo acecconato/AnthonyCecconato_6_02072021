@@ -40,7 +40,6 @@
     "mongoose-encryption": "^2.1.0",
     "mongoose-mongodb-errors": "^0.0.2",
     "mongoose-unique-validator": "^2.0.3",
-    "mongoose-validator": "^2.1.0",
     "morgan": "^1.10.0",
     "node-localstorage": "^2.2.1",
     "ora": "^5.4.1",
@@ -48,6 +47,7 @@
     "simple-node-logger": "^21.8.12",
     "swagger-ui-express": "^4.1.6",
     "uuid": "^8.3.2",
+    "validator": "^13.6.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
