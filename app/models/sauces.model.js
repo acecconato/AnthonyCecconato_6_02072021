@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const uniqueValidator = require('mongoose-unique-validator');
 
 const saucesSchema = new mongoose.Schema({
   userId: {
@@ -7,7 +6,7 @@ const saucesSchema = new mongoose.Schema({
   },
 
   name: {
-    type: String, required: true, maxlength: 30, trim: true, unique: true,
+    type: String, required: true, maxlength: 30, trim: true,
   },
 
   manufacturer: {
@@ -50,8 +49,5 @@ const saucesSchema = new mongoose.Schema({
     type: Number, trim: true, default: 0,
   },
 });
-
-// Prettier error message on unique error
-saucesSchema.plugin(uniqueValidator);
 
 module.exports = mongoose.model('sauces', saucesSchema);
