@@ -254,6 +254,8 @@ paths:
           description: "Forbidden"
         404:
           description: "Not Found"
+        415:
+          description: "Unsupported Media Type"
         422:
           description: "Unprocessable Entity"
         500:
@@ -334,6 +336,8 @@ paths:
           description: "Forbidden"
         404:
           description: "Not Found"
+        415:
+          description: "Unsupported Media Type"
         422:
           description: "Unprocessable Entity"
         500:
