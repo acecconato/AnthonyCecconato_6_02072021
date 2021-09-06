@@ -5,7 +5,7 @@ const log = require('simple-node-logger').createSimpleLogger(path.join(__dirname
 
 const router = express.Router();
 
-const usersController = require('../controllers/users.controller');
+const authController = require('../controllers/auth.controller');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -19,8 +19,8 @@ const loginLimiter = rateLimit({
   },
 });
 
-router.post('/login', loginLimiter, usersController.login);
+router.post('/login', loginLimiter, authController.login);
 
-router.post('/signup', usersController.signup);
+router.post('/signup', authController.signup);
 
 module.exports = router;

@@ -3,13 +3,12 @@ const slowDown = require('express-slow-down');
 
 const router = express.Router();
 
-const usersRoutes = require('./users.routes');
+const authRoutes = require('./auth.routes');
 const saucesRoutes = require('./sauces.routes');
 const gdprRoutes = require('./gdpr.routes');
+const usersRoutes = require('./users.route');
 
 const authMiddleware = require('../middlewares/auth.middleware');
-
-const usersController = require('../controllers/users.controller');
 
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15mns
@@ -17,10 +16,9 @@ const speedLimiter = slowDown({
   delayMs: 500, // 500ms
 });
 
-router.use('/auth', speedLimiter, usersRoutes);
+router.use('/auth', speedLimiter, authRoutes);
 router.use('/sauces', speedLimiter, authMiddleware, saucesRoutes);
 router.use('/gdpr', speedLimiter, authMiddleware, gdprRoutes);
-
-router.put('/users/:id/report', speedLimiter, authMiddleware, usersController.userReport);
+router.use('/users', speedLimiter, authMiddleware, usersRoutes);
 
 module.exports = router;
