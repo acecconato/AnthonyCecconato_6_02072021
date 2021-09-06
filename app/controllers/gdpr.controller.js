@@ -78,7 +78,7 @@ exports.updateMyPassword = async (req, res) => {
 
   user.password = newPassword;
 
-  const saveResult = await user.save().catch((e) => res.status(500).json(e));
+  const saveResult = await user.save().catch((e) => res.status(422).json(e));
 
   const savedUser = halson(saveResult._doc)
     .addLink('update-my-password', { method: 'PUT', href: `${process.env.apiBaseDir}/gdpr/update-my-password` })

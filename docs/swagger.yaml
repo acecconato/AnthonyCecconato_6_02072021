@@ -162,6 +162,8 @@ paths:
           description: "Forbidden"
         404:
           description: "Not Found"
+        422:
+          description: "Unprocessable Entity"
         500:
           description: "Internal server error"
 
