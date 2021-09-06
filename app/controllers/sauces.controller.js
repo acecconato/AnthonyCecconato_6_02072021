@@ -96,7 +96,7 @@ exports.update = (req, res, next) => {
 
     .then(async (sauce) => {
       if (req.user._id !== sauce.userId) {
-        return res.status(403).json('You are not the owner of this itemd');
+        return res.status(403).json('You are not the owner of this item');
       }
 
       sauce.name = sanitize(sauceObject.name);
