@@ -47,7 +47,7 @@
     "simple-node-logger": "^21.8.12",
     "swagger-ui-express": "^4.1.6",
     "uuid": "^8.3.2",
-    "validator": "^13.6.0",
+    "validator": "^13.7.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
