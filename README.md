@@ -1,5 +1,7 @@
 # AnthonyCecconato_6_02072021 - So Pekocko
 
+Le but était de créer une API avec Mongoose et Express, reliée à une application frontend.
+
 [![DeepScan grade](https://deepscan.io/api/teams/14397/projects/18081/branches/433392/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=14397&pid=18081&bid=433392)
 [![Known Vulnerabilities](https://snyk.io/test/github/acecconato/AnthonyCecconato_6_02072021/badge.svg)](https://snyk.io/test/github/{username}/{repo})
 
